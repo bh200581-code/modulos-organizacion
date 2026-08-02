@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción de Evidencias - Educación Técnico Profesional</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .container { max-width: 600px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; }
+        h2 { text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
+        h3 { text-align: center; color: #7f8c8d; font-size: 16px; margin-top: 0; margin-bottom: 25px; font-weight: normal; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        input[type="text"], select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #2980b9; }
+        .admin-note { font-size: 12px; color: #7f8c8d; margin-top: 5px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Entrega de Archivos</h2>
+    <h3>Módulos Formativos - Politécnico Salesiano Arquides Calderón</h3>
+    
+    <!-- Nota: La acción "/upload" requerirá un servidor backend (PHP, Node.js, Python, etc.) para procesar el archivo -->
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        
+        <div class="form-group">
+            <label for="docente">Nombre del Docente:</label>
+            <input type="text" id="docente" name="docente" required placeholder="Ej. Juan Pérez">
+        </div>
+
+        <div class="form-group">
+            <label for="bachillerato">Bachillerato (Sección):</label>
+            <select id="bachillerato" name="bachillerato" required>
+                <option value="">Cargando opciones desde Google Sheets...</option>
+            </select>
+            <span class="admin-note">La lista se alimenta dinámicamente de tu tabla administrativa.</span>
+        </div>
+
+        <div class="form-group">
+            <label for="modulo">Nombre del Módulo:</label>
+            <input type="text" id="modulo" name="modulo" required placeholder="Ej. Ofimática, Sistema Operativo, etc.">
+        </div>
+
+        <div class="form-group">
+            <label for="ra">Resultado de Aprendizaje (R.A.):</label>
+            <input type="text" id="ra" name="ra" required placeholder="Ej. RA1">
+        </div>
+
+        <div class="form-group">
+            <label for="archivo">Cargar evidencia (.pdf, .doc, .txt, etc.):</label>
+            <input type="file" id="archivo" name="archivo" required>
+        </div>
+
+        <button type="submit">Subir Documento</button>
+    </form>
+</div>
+
+<script>
+    // Enlace de datos CSV
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHMW--qYousWQN0o9TRxIpLy_4fpA71oGmYIoQZmax49JtFa_R1ikUAzao88Dh3RaD5yqM4X7Ln4uJ/pub?output=csv';
+
+    async function cargarBachilleratos() {
+        try {
+            const response = await fetch(csvUrl);
+            
+            if (!response.ok) {
+                throw new Error('No se pudo cargar el documento de Google Sheets.');
+            }
+            
+            const data = await response.text();
+            
+            // Expresión regular que maneja saltos de línea estándar (\n) y de Windows (\r\n)
+            const filas = data.split(/\r?\n/);
+            const select = document.getElementById('bachillerato');
+            
+            // Limpiar el selector antes de llenarlo
+            select.innerHTML = '<option value="">Seleccione el bachillerato...</option>';
+
+            filas.forEach((fila, index) => {
+                // Omitir la primera fila (index 0) porque contiene los encabezados
+                if (index === 0) return; 
+                
+                const columnas = fila.split(',');
+                if (columnas.length > 0) {
+                    // Extraer el texto de la primera columna, limpiando comillas extra y espacios si existen
+                    const nombreBachillerato = columnas[0].replace(/['"]+/g, '').trim();
+                    
+                    if (nombreBachillerato) {
+                        const option = document.createElement('option');
+                        option.value = nombreBachillerato;
+                        option.textContent = nombreBachillerato;
+                        select.appendChild(option);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error al obtener el CSV:', error);
+            document.getElementById('bachillerato').innerHTML = '<option value="">Error al cargar la lista. Verifique la conexión a internet o el enlace del CSV.</option>';
+        }
+    }
+
+    // Ejecutar la función inmediatamente al cargar la página
+    window.onload = cargarBachilleratos;
+</script>
+
+</body>
+</html>
